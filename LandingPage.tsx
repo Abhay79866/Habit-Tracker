@@ -127,7 +127,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 <div className="mt-16 mx-auto max-w-5xl transform hover:scale-[1.01] transition-transform duration-500">
                     <div className="bg-white rounded-[40px] shadow-2xl border border-slate-200 p-2 md:p-3 flex items-center justify-center relative overflow-hidden group">
                         <img
-                            src="./Images/hero-img-1.png"
+                            src="/images/hero-img-1.png"
                             alt="Dashboard Preview"
                             className="rounded-[32px] w-full h-auto object-cover"
                         />
