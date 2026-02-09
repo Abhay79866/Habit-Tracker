@@ -5,6 +5,7 @@ interface Habit {
   id: string;
   name: string;
   goal: number;
+  unit: string;
   checks: boolean[]; // 31 days
 }
 
@@ -13,16 +14,25 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const INITIAL_HABIT_NAMES = [
-  'Morning Meditation', 'Deep Work', 'Reading', 'Hydration', 'Exercise',
-  'Journaling', 'Networking', 'Learning French', 'Healthy Meal', 'No Sugar'
+const INITIAL_HABIT_CONFIGS = [
+  { name: 'Morning Meditation', goal: 10, unit: 'mins' },
+  { name: 'Deep Work', goal: 4, unit: 'hours' },
+  { name: 'Reading', goal: 20, unit: 'pages' },
+  { name: 'Hydration', goal: 8, unit: 'glasses' },
+  { name: 'Exercise', goal: 30, unit: 'mins' },
+  { name: 'Journaling', goal: 1, unit: 'page' },
+  { name: 'Networking', goal: 1, unit: 'person' },
+  { name: 'Learning French', goal: 15, unit: 'mins' },
+  { name: 'Healthy Meal', goal: 3, unit: 'meals' },
+  { name: 'No Sugar', goal: 1, unit: 'day' }
 ];
 
 const createDefaultHabits = (): Habit[] => 
-  INITIAL_HABIT_NAMES.map((name, i) => ({
+  INITIAL_HABIT_CONFIGS.map((config, i) => ({
     id: (i + 1).toString(),
-    name,
-    goal: 20,
+    name: config.name,
+    goal: config.goal,
+    unit: config.unit,
     checks: new Array(31).fill(false)
   }));
 
@@ -42,12 +52,16 @@ const HabitTracker = () => {
   const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
 
   const [allData, setAllData] = useState<Record<string, Habit[]>>(() => {
-    const saved = localStorage.getItem('habit-v7-data');
+    const saved = localStorage.getItem('habit-v8-data');
     if (saved) {
       try { 
         const parsed = JSON.parse(saved);
         Object.keys(parsed).forEach(key => {
-          parsed[key] = parsed[key].map((h: any) => ({ ...h, goal: h.goal ?? 20 }));
+          parsed[key] = parsed[key].map((h: any) => ({ 
+            ...h, 
+            goal: h.goal ?? 20,
+            unit: h.unit ?? 'mins'
+          }));
         });
         return parsed;
       } catch (e) { return {}; }
@@ -59,7 +73,11 @@ const HabitTracker = () => {
     if (allData[monthKey]) return allData[monthKey];
     const keys = Object.keys(allData).sort().reverse();
     if (keys.length > 0) {
-      return allData[keys[0]].map(h => ({ ...h, checks: new Array(31).fill(false) }));
+      // Inherit names and units from most recent entry, but reset checks
+      return allData[keys[0]].map(h => ({ 
+        ...h, 
+        checks: new Array(31).fill(false) 
+      }));
     }
     return createDefaultHabits();
   }, [allData, monthKey]);
@@ -96,7 +114,7 @@ const HabitTracker = () => {
   const todayStats = getTodayStats();
 
   useEffect(() => {
-    localStorage.setItem('habit-v7-data', JSON.stringify(allData));
+    localStorage.setItem('habit-v8-data', JSON.stringify(allData));
     renderCharts();
   }, [allData, monthKey, habits, currentMonth, currentYear, todayStats.completed]);
 
@@ -118,14 +136,12 @@ const HabitTracker = () => {
   const renderCharts = () => {
     const commonAnim = { duration: 1000, easing: 'easeOutQuart' as any };
 
-    // 1. Line Chart
     if (lineChartRef.current) {
       if (lineChartInstance.current) lineChartInstance.current.destroy();
       const dailyCompletion = Array.from({ length: daysInMonth }, (_, i) => {
         const count = habits.filter(h => h.checks[i]).length;
         return (count / habits.length) * 100;
       });
-
       lineChartInstance.current = new (window as any).Chart(lineChartRef.current, {
         type: 'line',
         data: {
@@ -153,7 +169,6 @@ const HabitTracker = () => {
       });
     }
 
-    // 2. Weekly Momentum
     if (weeklyBarRef.current) {
       if (weeklyBarInstance.current) weeklyBarInstance.current.destroy();
       weeklyBarInstance.current = new (window as any).Chart(weeklyBarRef.current, {
@@ -190,7 +205,6 @@ const HabitTracker = () => {
       });
     }
 
-    // 3. Daily Doughnut
     if (dailyDoughnutRef.current) {
       if (dailyDoughnutInstance.current) dailyDoughnutInstance.current.destroy();
       dailyDoughnutInstance.current = new (window as any).Chart(dailyDoughnutRef.current, {
@@ -230,7 +244,6 @@ const HabitTracker = () => {
       return h;
     });
     setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
-    // Clear animation state after duration
     setTimeout(() => setAnimatingHabitId(null), 400);
   };
 
@@ -239,9 +252,14 @@ const HabitTracker = () => {
     setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
   };
 
+  const updateUnit = (habitId: string, unit: string) => {
+    const newHabits = habits.map(h => h.id === habitId ? { ...h, unit } : h);
+    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 space-y-8 font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* HEADER ROW - STAGGER 0s */}
+      {/* HEADER ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
         <div className="bg-white rounded-[40px] p-10 shadow-sm flex flex-col justify-between border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div>
@@ -249,7 +267,7 @@ const HabitTracker = () => {
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">FocusBoard</h1>
-            <p className="text-slate-500 mt-2 font-medium text-lg leading-tight">Elevated routine engineering.</p>
+            <p className="text-slate-500 mt-2 font-medium text-lg leading-tight">Master your routine engineering.</p>
           </div>
           
           <div className="mt-10 flex gap-4">
@@ -280,13 +298,13 @@ const HabitTracker = () => {
         </div>
       </div>
 
-      {/* STATS GRID - STAGGER 0.1s */}
+      {/* STATS GRID */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         <div className="lg:col-span-2 bg-white rounded-[40px] p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="flex justify-between items-start mb-8">
             <div>
               <h3 className="text-2xl font-black text-slate-900 tracking-tight">Weekly Momentum</h3>
-              <p className="text-slate-400 font-medium">Monthly consistency heatmap</p>
+              <p className="text-slate-400 font-medium">Aggregate completion intensity</p>
             </div>
           </div>
           <div className="h-56 w-full">
@@ -319,14 +337,14 @@ const HabitTracker = () => {
         </div>
       </section>
 
-      {/* MAIN HABIT GRID - STAGGER 0.2s */}
+      {/* MAIN HABIT GRID */}
       <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up hover:shadow-xl transition-all duration-300" style={{ animationDelay: '200ms' }}>
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-slate-50/40">
                 <th className="p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white z-20 w-80 min-w-[320px] border-b border-gray-100">Daily Routines</th>
-                <th className="p-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">Goal</th>
+                <th className="p-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">Daily Target</th>
                 {Array.from({ length: 31 }, (_, i) => {
                   const day = i + 1;
                   const weekIdx = Math.floor(i / 7);
@@ -337,16 +355,14 @@ const HabitTracker = () => {
                     </th>
                   );
                 })}
-                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 border-l border-slate-100">Done</th>
-                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">Left</th>
-                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">%</th>
-                <th className="p-8 text-right text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-gray-100 min-w-[160px]">Progress</th>
+                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 border-l border-slate-100">Days Done</th>
+                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">% Done</th>
+                <th className="p-8 text-right text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-gray-100 min-w-[160px]">Consistency</th>
               </tr>
             </thead>
             <tbody>
               {habits.map((habit) => {
                 const doneCount = habit.checks.slice(0, daysInMonth).filter(Boolean).length;
-                const leftCount = Math.max(0, daysInMonth - doneCount);
                 const progress = Math.round((doneCount / daysInMonth) * 100);
                 
                 return (
@@ -362,12 +378,22 @@ const HabitTracker = () => {
                       />
                     </td>
                     <td className="p-4 text-center">
-                      <input 
-                        type="number"
-                        value={habit.goal}
-                        onChange={e => updateGoal(habit.id, parseInt(e.target.value) || 0)}
-                        className="w-16 bg-transparent border-none text-center font-bold text-slate-700 focus:ring-0 transition-all focus:scale-110"
-                      />
+                      {/* Solution 2: Pill Badge for Daily Target with editable fields */}
+                      <div className="bg-slate-100 px-3 py-1.5 rounded-full flex items-center justify-center gap-1 w-fit mx-auto transition-all hover:bg-slate-200 border border-slate-200 group-hover:border-indigo-200">
+                        <input 
+                          type="number"
+                          value={habit.goal}
+                          onChange={e => updateGoal(habit.id, parseInt(e.target.value) || 0)}
+                          className="w-8 bg-transparent border-none text-right font-black text-slate-800 focus:ring-0 outline-none p-0 text-sm appearance-none"
+                        />
+                        <input 
+                          type="text"
+                          value={habit.unit}
+                          placeholder="unit"
+                          onChange={e => updateUnit(habit.id, e.target.value)}
+                          className="w-14 bg-transparent border-none text-left font-bold text-slate-500 focus:ring-0 outline-none p-0 text-[10px] uppercase tracking-tighter"
+                        />
+                      </div>
                     </td>
                     {habit.checks.map((checked, dayIdx) => {
                       const day = dayIdx + 1;
@@ -391,7 +417,6 @@ const HabitTracker = () => {
                       );
                     })}
                     <td className="p-4 text-center border-l border-slate-50 font-black text-slate-700">{doneCount}</td>
-                    <td className="p-4 text-center font-bold text-slate-400">{leftCount}</td>
                     <td className="p-4 text-center font-black text-indigo-600">{progress}%</td>
                     <td className="p-8">
                       <div className="flex items-center gap-4">
@@ -416,7 +441,7 @@ const HabitTracker = () => {
       <div className="flex flex-col items-center gap-8 py-10 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
         <button 
           onClick={() => {
-            const newHabits = [...habits, { id: Date.now().toString(), name: 'New Routine', goal: 20, checks: new Array(31).fill(false) }];
+            const newHabits = [...habits, { id: Date.now().toString(), name: 'New Routine', goal: 10, unit: 'mins', checks: new Array(31).fill(false) }];
             setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
           }}
           className="group flex items-center gap-3 bg-indigo-600 text-white px-10 py-5 rounded-[24px] font-black text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200 hover:-translate-y-1 active:scale-95"
@@ -425,7 +450,7 @@ const HabitTracker = () => {
           <span>Add New Daily Habit</span>
         </button>
         <div className="text-slate-400 text-[11px] font-black uppercase tracking-[0.4em]">
-          FocusBoard Pro • Dynamic Routine Engine v8.2
+          FocusBoard Pro • Precision Productivity Engine v8.3
         </div>
       </div>
     </div>
