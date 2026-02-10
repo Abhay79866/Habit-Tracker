@@ -32,7 +32,7 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-white rounded-[40px] p-8 md:p-10 shadow-2xl max-w-md w-full text-center animate-fade-in-up relative" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-2xl max-w-md w-full text-center animate-fade-in-up relative" onClick={e => e.stopPropagation()}>
                 {/* Close Button */}
                 {onClose && (
                     <button
@@ -68,7 +68,7 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({ onClose }) => {
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                             required
-                            className="w-full bg-slate-50 border-none rounded-2xl py-3 px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
+                            className="w-full bg-slate-50 border-none rounded-2xl py-2.5 px-4 md:py-3 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
                         />
                     )}
                     <input
@@ -77,7 +77,7 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({ onClose }) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="w-full bg-slate-50 border-none rounded-2xl py-3 px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
+                        className="w-full bg-slate-50 border-none rounded-2xl py-2.5 px-4 md:py-3 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
                     />
                     <input
                         type="password"
@@ -85,7 +85,7 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({ onClose }) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="w-full bg-slate-50 border-none rounded-2xl py-3 px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
+                        className="w-full bg-slate-50 border-none rounded-2xl py-2.5 px-4 md:py-3 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
                     />
                     <button
                         type="submit"

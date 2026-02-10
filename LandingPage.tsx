@@ -14,7 +14,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             {/* 1. Navbar (Floating & Glassmorphism) */}
             <nav className="fixed top-4 left-4 right-4 z-50 bg-white/80 backdrop-blur-md border border-white/20 shadow-xl shadow-indigo-100 max-w-7xl mx-auto rounded-2xl transition-all duration-300">
                 <div className="px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-20">
+                    <div className="flex justify-between items-center h-16 md:h-20">
                         {/* Logo */}
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
@@ -22,7 +22,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <span className="text-xl font-black text-slate-900 tracking-tight">FocusBoard</span>
+                            <span className="text-lg md:text-xl font-black text-slate-900 tracking-tight">FocusBoard</span>
                         </div>
 
                         {/* Desktop Links */}
@@ -108,17 +108,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </nav>
 
             {/* 2. Hero Section */}
-            <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
-                <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6 leading-tight">
+            <section className="pt-24 pb-12 md:pt-32 md:pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+                <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight mb-6 leading-tight">
                     Master Your Routine.<br />
                     <span className="text-indigo-600">Own Your Day.</span>
                 </h1>
-                <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
+                <p className="text-base md:text-lg lg:text-xl text-slate-500 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
                     Stop relying on motivation. Build habits that stick with the ultimate visual tracker for students and creators.
                 </p>
                 <button
                     onClick={onLoginClick}
-                    className="bg-indigo-600 text-white px-8 py-4 rounded-2xl text-lg font-bold hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-200 hover:shadow-indigo-300 ring-4 ring-indigo-50"
+                    className="bg-indigo-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl text-base md:text-lg font-bold hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-200 hover:shadow-indigo-300 ring-4 ring-indigo-50"
                 >
                     Start Tracking for Free
                 </button>
@@ -136,40 +136,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </section>
 
             {/* 3. Bento Grid Features */}
-            <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <section id="features" className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Card 1: Visuals */}
-                    <div className="bg-white p-10 rounded-[40px] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 col-span-1 md:col-span-2 group">
+                    <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 col-span-1 md:col-span-2 group">
                         <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-900 mb-3">Don't break the chain.</h3>
+                        <h3 className="text-xl md:text-2xl font-black text-slate-900 mb-3">Don't break the chain.</h3>
                         <p className="text-slate-500 font-medium leading-relaxed">Visualize your streaks with beautiful, contributions-style heatmaps that make consistency addictive.</p>
                     </div>
 
                     {/* Card 2: Analytics */}
-                    <div className="bg-white p-10 rounded-[40px] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 group">
+                    <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 group">
                         <div className="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-900 mb-3">Weekly Momentum.</h3>
+                        <h3 className="text-xl md:text-2xl font-black text-slate-900 mb-3">Weekly Momentum.</h3>
                         <p className="text-slate-500 font-medium leading-relaxed">Know exactly which days you perform best with advanced analytics.</p>
                     </div>
 
                     {/* Card 3: Focus */}
                     <div className="bg-slate-900 p-10 rounded-[40px] shadow-sm hover:shadow-xl transition-all duration-300 col-span-1 md:col-span-3 text-center group">
-                        <h3 className="text-2xl font-black text-white mb-3">Distraction-free interface designed for deep work.</h3>
+                        <h3 className="text-xl md:text-2xl font-black text-white mb-3">Distraction-free interface designed for deep work.</h3>
                         <p className="text-slate-400 font-medium">No clutter. No ads. Just you and your goals.</p>
                     </div>
                 </div>
             </section>
 
             {/* 4. Social Proof */}
-            <section id="testimonials" className="py-20 bg-white border-y border-slate-100">
+            <section id="testimonials" className="py-12 md:py-20 bg-white border-y border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Testimony 1 */}
-                        <div className="bg-slate-50 p-8 rounded-3xl">
+                        <div className="bg-slate-50 p-6 md:p-8 rounded-3xl">
                             <div className="flex text-indigo-500 mb-4">★★★★★</div>
                             <p className="text-slate-700 font-bold mb-6">"FocusBoard helped me stick to my coding routine for 30 days straight! simple, yet powerful."</p>
                             <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             </div>
                         </div>
                         {/* Testimony 2 */}
-                        <div className="bg-slate-50 p-8 rounded-3xl">
+                        <div className="bg-slate-50 p-6 md:p-8 rounded-3xl">
                             <div className="flex text-indigo-500 mb-4">★★★★★</div>
                             <p className="text-slate-700 font-bold mb-6">"The only habit tracker that I've actually stuck with. The visuals are just stunning."</p>
                             <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                             </div>
                         </div>
                         {/* Testimony 3 */}
-                        <div className="bg-slate-50 p-8 rounded-3xl">
+                        <div className="bg-slate-50 p-6 md:p-8 rounded-3xl">
                             <div className="flex text-indigo-500 mb-4">★★★★★</div>
                             <p className="text-slate-700 font-bold mb-6">"Finally, a tracker that doesn't feel like a spreadsheet. It feels like a game."</p>
                             <div className="flex items-center gap-3">
@@ -209,17 +209,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </section>
 
             {/* 5. Pricing */}
-            <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <section id="pricing" className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">Simple, Transparent Pricing</h2>
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 mb-4">Simple, Transparent Pricing</h2>
                     <p className="text-slate-500 font-medium">Start for free, upgrade when you're ready.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                     {/* Free Plan */}
-                    <div className="bg-white p-10 rounded-[40px] border border-slate-200 hover:border-indigo-100 transition-all">
+                    <div className="bg-white p-6 md:p-10 rounded-[40px] border border-slate-200 hover:border-indigo-100 transition-all">
                         <h3 className="text-xl font-bold text-slate-900 mb-2">Starter</h3>
-                        <div className="text-4xl font-black text-slate-900 mb-6">$0<span className="text-lg text-slate-400 font-medium">/mo</span></div>
+                        <div className="text-3xl md:text-4xl font-black text-slate-900 mb-6">$0<span className="text-lg text-slate-400 font-medium">/mo</span></div>
                         <ul className="space-y-4 mb-10">
                             <li className="flex items-center gap-3 text-slate-600 font-bold"><span className="text-indigo-600">✓</span> Essential Tracking</li>
                             <li className="flex items-center gap-3 text-slate-600 font-bold"><span className="text-indigo-600">✓</span> Unlimited Habits</li>
@@ -229,10 +229,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
 
                     {/* Pro Plan */}
-                    <div className="bg-slate-900 p-10 rounded-[40px] shadow-xl relative overflow-hidden">
+                    <div className="bg-slate-900 p-6 md:p-10 rounded-[40px] shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-black px-4 py-2 rounded-bl-2xl">POPULAR</div>
                         <h3 className="text-xl font-bold text-white mb-2">Pro</h3>
-                        <div className="text-4xl font-black text-white mb-6">$5<span className="text-lg text-slate-500 font-medium">/mo</span></div>
+                        <div className="text-3xl md:text-4xl font-black text-white mb-6">$5<span className="text-lg text-slate-500 font-medium">/mo</span></div>
                         <ul className="space-y-4 mb-10">
                             <li className="flex items-center gap-3 text-slate-300 font-bold"><span className="text-indigo-400">✓</span> Unlimited History</li>
                             <li className="flex items-center gap-3 text-slate-300 font-bold"><span className="text-indigo-400">✓</span> Advanced Analytics</li>
@@ -245,7 +245,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </section>
 
             {/* 6. Footer */}
-            <footer className="bg-slate-50 py-12 border-t border-slate-200">
+            <footer className="bg-slate-50 py-8 md:py-12 border-t border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="col-span-1 md:col-span-2">
                         <div className="flex items-center gap-3 mb-4">

@@ -419,11 +419,11 @@ const HabitTracker = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 space-y-8 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-6 lg:p-8 space-y-8 font-['Plus_Jakarta_Sans',sans-serif]">
 
       {/* HEADER ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
-        <div className="bg-white rounded-[40px] p-10 shadow-sm flex flex-col justify-between border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm flex flex-col justify-between border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div>
             <div className="flex justify-between items-start">
               <div className="w-14 h-14 bg-indigo-600 rounded-[24px] flex items-center justify-center mb-6 shadow-xl shadow-indigo-100">
@@ -435,17 +435,17 @@ const HabitTracker = () => {
                 </button>
               )}
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
               {user?.displayName || 'FocusBoard'}
             </h1>
-            <p className="text-slate-500 mt-2 font-medium text-lg leading-tight">Master your routine engineering.</p>
+            <p className="text-slate-500 mt-2 font-medium text-base md:text-lg leading-tight">Master your routine engineering.</p>
           </div>
 
           <div className="mt-10 flex gap-4">
             <select
               value={currentMonth}
               onChange={e => setCurrentMonth(parseInt(e.target.value))}
-              className="flex-1 bg-slate-50 border-none rounded-2xl py-4 px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer"
+              className="flex-1 bg-slate-50 border-none rounded-2xl py-3 px-4 md:py-4 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer"
             >
               {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
             </select>
@@ -453,14 +453,14 @@ const HabitTracker = () => {
               type="number"
               value={currentYear}
               onChange={e => setCurrentYear(parseInt(e.target.value) || 2026)}
-              className="w-28 bg-slate-50 border-none rounded-2xl py-4 px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 text-center"
+              className="w-28 bg-slate-50 border-none rounded-2xl py-3 px-4 md:py-4 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 text-center"
             />
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-[40px] p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="lg:col-span-2 bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-bold text-slate-800">Growth Trajectory</h2>
+            <h2 className="text-lg md:text-xl font-bold text-slate-800">Growth Trajectory</h2>
             <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">Monthly Pulse</span>
           </div>
           <div className="relative h-48 w-full" style={{ height: '192px' }}>
@@ -471,10 +471,10 @@ const HabitTracker = () => {
 
       {/* STATS GRID */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        <div className="lg:col-span-2 bg-white rounded-[40px] p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="lg:col-span-2 bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Weekly Momentum</h3>
+              <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Weekly Momentum</h3>
               <p className="text-slate-400 font-medium">Aggregate completion intensity</p>
             </div>
           </div>
@@ -483,9 +483,9 @@ const HabitTracker = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[40px] p-10 shadow-sm border border-gray-100 flex flex-col items-center hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 flex flex-col items-center hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="w-full text-center mb-6">
-            <h3 className="text-xl font-black text-slate-900 tracking-tight">Daily Status</h3>
+            <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">Daily Status</h3>
             <p className="text-slate-400 font-medium text-sm">Today's Performance</p>
           </div>
           <div className="relative w-40 h-40" style={{ height: '160px', width: '160px' }}>
@@ -498,11 +498,11 @@ const HabitTracker = () => {
           <div className="mt-8 grid grid-cols-2 gap-8 w-full">
             <div className="text-center">
               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Done</p>
-              <p className="text-2xl font-black text-slate-800">{todayStats.completed}</p>
+              <p className="text-xl md:text-2xl font-black text-slate-800">{todayStats.completed}</p>
             </div>
             <div className="text-center">
               <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Left</p>
-              <p className="text-2xl font-black text-slate-800">{todayStats.left}</p>
+              <p className="text-xl md:text-2xl font-black text-slate-800">{todayStats.left}</p>
             </div>
           </div>
         </div>
@@ -514,7 +514,7 @@ const HabitTracker = () => {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-slate-50/40">
-                <th className="p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white z-20 w-80 min-w-[320px] border-b border-gray-100">Daily Routines</th>
+                <th className="p-4 md:p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white z-20 w-40 min-w-[160px] md:w-80 md:min-w-[320px] border-b border-gray-100">Daily Routines</th>
                 <th className="p-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">Daily Target</th>
                 {Array.from({ length: 31 }, (_, i) => {
                   const day = i + 1;
@@ -528,7 +528,7 @@ const HabitTracker = () => {
                 })}
                 <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 border-l border-slate-100">Days Done</th>
                 <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">% Done</th>
-                <th className="p-8 text-right text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-gray-100 min-w-[160px]">Consistency</th>
+                <th className="p-4 md:p-8 text-right text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-gray-100 min-w-[160px]">Consistency</th>
               </tr>
             </thead>
             <tbody>
@@ -538,9 +538,9 @@ const HabitTracker = () => {
 
                 return (
                   <tr key={habit.id} className="group hover:bg-slate-50/50 transition-colors border-b border-gray-50 last:border-0">
-                    <td className="p-8 sticky left-0 bg-white group-hover:bg-slate-50/50 z-20 border-r border-gray-100">
+                    <td className="p-4 md:p-8 sticky left-0 bg-white group-hover:bg-slate-50/50 z-20 border-r border-gray-100">
                       <input
-                        className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 w-full outline-none placeholder-slate-300 text-lg transition-colors group-hover:text-indigo-600"
+                        className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600"
                         value={habit.name}
                         onChange={e => {
                           const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
@@ -587,7 +587,7 @@ const HabitTracker = () => {
                     })}
                     <td className="p-4 text-center border-l border-slate-50 font-black text-slate-700">{doneCount}</td>
                     <td className="p-4 text-center font-black text-indigo-600">{progress}%</td>
-                    <td className="p-8">
+                    <td className="p-4 md:p-8">
                       <div className="flex items-center gap-4">
                         <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden border border-gray-100 shadow-inner">
                           <div
@@ -604,7 +604,7 @@ const HabitTracker = () => {
             </tbody>
             <tfoot>
               <tr className="bg-slate-50 border-t-2 border-slate-200">
-                <td className="p-8 sticky left-0 bg-slate-50 z-20 font-black text-slate-900 uppercase tracking-widest text-xs border-r border-gray-200">
+                <td className="p-4 md:p-8 sticky left-0 bg-slate-50 z-20 font-black text-slate-900 uppercase tracking-widest text-xs border-r border-gray-200">
                   Monthly Average
                 </td>
                 <td colSpan={32}></td>
@@ -627,7 +627,7 @@ const HabitTracker = () => {
             const newHabits = [...habits, { id: Date.now().toString(), name: 'New Routine', goal: 10, unit: 'mins', checks: new Array(31).fill(false) }];
             setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
           }}
-          className="group flex items-center gap-3 bg-indigo-600 text-white px-10 py-5 rounded-[24px] font-black text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200 hover:-translate-y-1 active:scale-95"
+          className="group flex items-center gap-3 bg-indigo-600 text-white px-6 py-4 md:px-10 md:py-5 rounded-[24px] font-black text-base md:text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200 hover:-translate-y-1 active:scale-95"
         >
           <span className="text-2xl leading-none font-light transition-transform group-hover:rotate-90 inline-block">+</span>
           <span>Add New Daily Habit</span>
