@@ -100,7 +100,50 @@ const HabitTracker = () => {
     return () => observer.disconnect();
   }, []);
 
+
   const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+
+  /* ------------------------------------------------------------------
+   * STREAK LOGIC
+   * ------------------------------------------------------------------ */
+  const calculateStreak = (habitName: string, allData: Record<string, Habit[]>) => {
+    let streak = 0;
+    const today = new Date(); // Use real today for alignment
+    // We start checking from Yesterday to seeing if the chain is alive.
+    // If Today is checked, we add 1 to whatever the past streak is.
+
+    // Check Today
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const todayDay = today.getDate();
+    const todayHabits = allData[todayKey];
+    const todayHabit = todayHabits?.find(h => h.name === habitName);
+    const isTodayDone = todayHabit?.checks[todayDay - 1] || false;
+
+    // Traverse backwards from Yesterday
+    let dateIter = new Date(today);
+    dateIter.setDate(dateIter.getDate() - 1); // Start with Yesterday
+
+    while (true) {
+      const y = dateIter.getFullYear();
+      const m = dateIter.getMonth() + 1;
+      const d = dateIter.getDate();
+      const mKey = `${y}-${String(m).padStart(2, '0')}`;
+
+      const habitsInMonth = allData[mKey];
+      if (!habitsInMonth) break; // No data for this month, stop.
+
+      const habit = habitsInMonth.find(h => h.name === habitName);
+      if (!habit || !habit.checks[d - 1]) {
+        break; // Streak broken
+      }
+
+      streak++;
+      dateIter.setDate(dateIter.getDate() - 1); // Go back one day
+    }
+
+    return isTodayDone ? streak + 1 : streak;
+  };
+
 
   const [allData, setAllData] = useState<Record<string, Habit[]>>(() => {
     const saved = localStorage.getItem('habit-v8-data');
@@ -538,7 +581,7 @@ const HabitTracker = () => {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-slate-50/40 dark:bg-slate-800/50">
-                <th className="p-4 md:p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white dark:bg-slate-900 z-20 w-40 min-w-[160px] md:w-80 md:min-w-[320px] border-b border-gray-100 dark:border-slate-800 border-r dark:border-r-slate-800">Daily Routines</th>
+                <th className="p-4 md:p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white dark:bg-slate-900 z-20 w-52 min-w-[200px] md:w-80 md:min-w-[320px] border-b border-gray-100 dark:border-slate-800 border-r dark:border-r-slate-800">Daily Routines</th>
                 <th className="p-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800">Daily Target</th>
                 {Array.from({ length: 31 }, (_, i) => {
                   const day = i + 1;
@@ -561,16 +604,24 @@ const HabitTracker = () => {
                 const progress = Math.round((doneCount / daysInMonth) * 100);
 
                 return (
-                  <tr key={habit.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0">
+                  <tr key={habit.id} className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0 ${calculateStreak(habit.name, allData) >= 10 ? 'shadow-[0_0_15px_rgba(234,179,8,0.3)] border-l-4 border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-900/10' : ''}`}>
                     <td className="p-4 md:p-8 sticky left-0 bg-white dark:bg-slate-900 group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/50 z-20 border-r border-gray-100 dark:border-slate-800">
-                      <input
-                        className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 dark:text-white w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
-                        value={habit.name}
-                        onChange={e => {
-                          const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
-                          setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
-                        }}
-                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 dark:text-white w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
+                          value={habit.name}
+                          onChange={e => {
+                            const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
+                            setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+                          }}
+                        />
+                        {calculateStreak(habit.name, allData) >= 3 && (
+                          <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full animate-bounce-slow">
+                            <span className="text-sm">🔥</span>
+                            <span className="text-xs font-black text-orange-600 dark:text-orange-400">{calculateStreak(habit.name, allData)}</span>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 text-center">
                       <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full flex items-center justify-center gap-1 w-fit mx-auto transition-all hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 group-hover:border-indigo-200 dark:group-hover:border-indigo-900">
