@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { usePWAInstall } from './usePWAInstall';
+import { BuyMeCoffee } from './BuyMeCoffee';
+
 
 
 interface LandingPageProps {
@@ -294,6 +296,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     </div>
                 </div>
             </footer>
+            <BuyMeCoffee />
         </div>
     );
 };
