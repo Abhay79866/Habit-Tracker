@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { ThemeToggle } from './ThemeToggle';
 import { createRoot } from 'react-dom/client';
 import { LoginOverlay } from './LoginOverlay';
 import { LandingPage } from './LandingPage';
@@ -84,7 +85,19 @@ const HabitTracker = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [animatingHabitId, setAnimatingHabitId] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false); // Theme state
   const [showLogin, setShowLogin] = useState(false);
+
+  // Detect theme changes
+  useEffect(() => {
+    const checkTheme = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
+    checkTheme(); // Initial check
+
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
 
   const monthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
 
@@ -169,6 +182,8 @@ const HabitTracker = () => {
 
   const renderCharts = () => {
     const commonAnim = { duration: 1000, easing: 'easeOutQuart' as any };
+    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+    const textColor = isDarkMode ? '#94a3b8' : '#64748b'; // slate-400 vs slate-500
 
     if (lineChartRef.current) {
       if (lineChartInstance.current) lineChartInstance.current.destroy();
@@ -196,8 +211,8 @@ const HabitTracker = () => {
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            x: { grid: { display: false } },
-            y: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { tickBorderDash: [5, 5] } }
+            x: { grid: { display: false }, ticks: { color: textColor } },
+            y: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: gridColor, tickBorderDash: [5, 5] } }
           }
         }
       });
@@ -233,7 +248,7 @@ const HabitTracker = () => {
           },
           scales: {
             y: { beginAtZero: true, max: 100, display: false },
-            x: { grid: { display: false }, ticks: { font: { weight: 'bold', family: 'Plus Jakarta Sans' } } }
+            x: { grid: { display: false }, ticks: { color: textColor, font: { weight: 'bold', family: 'Plus Jakarta Sans' } } }
           }
         }
       });
@@ -247,7 +262,7 @@ const HabitTracker = () => {
           labels: ['Completed', 'Left'],
           datasets: [{
             data: [todayStats.completed, todayStats.left],
-            backgroundColor: ['#fda4af', '#cbd5e1'],
+            backgroundColor: ['#fda4af', isDarkMode ? '#1e293b' : '#cbd5e1'], // Darker slate for unused part in dark mode
             hoverOffset: 4,
             borderWidth: 0,
             borderRadius: 8
@@ -405,8 +420,12 @@ const HabitTracker = () => {
    * ------------------------------------------------------------------ */
 
   useEffect(() => {
-    renderCharts();
-  }, [habits, currentMonth, currentYear]); // Re-render charts when data or date changes
+    const timer = setTimeout(() => {
+      renderCharts();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [habits, currentMonth, currentYear, isDarkMode]); // Re-render charts when data or date or theme changes
 
   // If not authenticated, show Landing Page
   if (!loading && !user) {
@@ -419,33 +438,35 @@ const HabitTracker = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-6 lg:p-8 space-y-8 font-['Plus_Jakarta_Sans',sans-serif]">
-
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 p-4 md:p-6 lg:p-8 space-y-8 font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
       {/* HEADER ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
-        <div className="bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm flex flex-col justify-between border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm flex flex-col justify-between border border-gray-100 dark:border-slate-800 ring-1 dark:ring-white/5 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div>
             <div className="flex justify-between items-start">
-              <div className="w-14 h-14 bg-indigo-600 rounded-[24px] flex items-center justify-center mb-6 shadow-xl shadow-indigo-100">
+              <div className="w-14 h-14 bg-indigo-600 rounded-[24px] flex items-center justify-center mb-6 shadow-xl shadow-indigo-100 dark:shadow-none">
                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
-              {user && (
-                <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">
-                  Logout
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                {user && (
+                  <button onClick={handleLogout} className="text-xs font-bold text-slate-400 hover:text-red-500 transition-colors">
+                    Logout
+                  </button>
+                )}
+              </div>
             </div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               {user?.displayName || 'FocusBoard'}
             </h1>
-            <p className="text-slate-500 mt-2 font-medium text-base md:text-lg leading-tight">Master your routine engineering.</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium text-base md:text-lg leading-tight">Master your routine engineering.</p>
           </div>
 
           <div className="mt-10 flex gap-4">
             <select
               value={currentMonth}
               onChange={e => setCurrentMonth(parseInt(e.target.value))}
-              className="flex-1 bg-slate-50 border-none rounded-2xl py-3 px-4 md:py-4 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer"
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-3 px-4 md:py-4 md:px-5 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer"
             >
               {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
             </select>
@@ -453,14 +474,14 @@ const HabitTracker = () => {
               type="number"
               value={currentYear}
               onChange={e => setCurrentYear(parseInt(e.target.value) || 2026)}
-              className="w-28 bg-slate-50 border-none rounded-2xl py-3 px-4 md:py-4 md:px-5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 text-center"
+              className="w-28 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl py-3 px-4 md:py-4 md:px-5 text-sm font-bold text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 text-center"
             />
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 dark:border-slate-800 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-lg md:text-xl font-bold text-slate-800">Growth Trajectory</h2>
+            <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-white">Growth Trajectory</h2>
             <span className="bg-indigo-50 text-indigo-600 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">Monthly Pulse</span>
           </div>
           <div className="relative h-48 w-full" style={{ height: '192px' }}>
@@ -471,10 +492,10 @@ const HabitTracker = () => {
 
       {/* STATS GRID */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        <div className="lg:col-span-2 bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 dark:border-slate-800 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">Weekly Momentum</h3>
+              <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Weekly Momentum</h3>
               <p className="text-slate-400 font-medium">Aggregate completion intensity</p>
             </div>
           </div>
@@ -483,52 +504,52 @@ const HabitTracker = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 flex flex-col items-center hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 dark:border-slate-800 ring-1 dark:ring-white/5 flex flex-col items-center hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
           <div className="w-full text-center mb-6">
-            <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">Daily Status</h3>
+            <h3 className="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight">Daily Status</h3>
             <p className="text-slate-400 font-medium text-sm">Today's Performance</p>
           </div>
           <div className="relative w-40 h-40" style={{ height: '160px', width: '160px' }}>
             <canvas ref={dailyDoughnutRef}></canvas>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl font-black text-slate-800">{todayStats.percentage}%</span>
+              <span className="text-2xl font-black text-slate-800 dark:text-white">{todayStats.percentage}%</span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Done</span>
             </div>
           </div>
           <div className="mt-8 grid grid-cols-2 gap-8 w-full">
             <div className="text-center">
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Done</p>
-              <p className="text-xl md:text-2xl font-black text-slate-800">{todayStats.completed}</p>
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-500 uppercase tracking-widest mb-1">Done</p>
+              <p className="text-xl md:text-2xl font-black text-slate-800 dark:text-white">{todayStats.completed}</p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Left</p>
-              <p className="text-xl md:text-2xl font-black text-slate-800">{todayStats.left}</p>
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-500 uppercase tracking-widest mb-1">Left</p>
+              <p className="text-xl md:text-2xl font-black text-slate-800 dark:text-white">{todayStats.left}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* MAIN HABIT GRID */}
-      <div className="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden animate-fade-in-up hover:shadow-xl transition-all duration-300" style={{ animationDelay: '200ms' }}>
+      <div className="bg-white dark:bg-slate-900 rounded-[40px] shadow-sm border border-gray-100 dark:border-slate-800 ring-1 dark:ring-white/5 overflow-hidden animate-fade-in-up hover:shadow-xl transition-all duration-300" style={{ animationDelay: '200ms' }}>
         <div className="overflow-x-auto scrollbar-thin">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-slate-50/40">
-                <th className="p-4 md:p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white z-20 w-40 min-w-[160px] md:w-80 md:min-w-[320px] border-b border-gray-100">Daily Routines</th>
-                <th className="p-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">Daily Target</th>
+              <tr className="bg-slate-50/40 dark:bg-slate-800/50">
+                <th className="p-4 md:p-8 text-left text-xs font-black text-slate-400 uppercase tracking-[0.2em] sticky left-0 bg-white dark:bg-slate-900 z-20 w-40 min-w-[160px] md:w-80 md:min-w-[320px] border-b border-gray-100 dark:border-slate-800 border-r dark:border-r-slate-800">Daily Routines</th>
+                <th className="p-4 text-center text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800">Daily Target</th>
                 {Array.from({ length: 31 }, (_, i) => {
                   const day = i + 1;
                   const weekIdx = Math.floor(i / 7);
                   const isVisible = day <= daysInMonth;
                   return (
-                    <th key={i} className={`p-3 text-center border-b border-gray-100 w-12 min-w-[48px] ${isVisible ? PASTEL_WEEKS[Math.min(weekIdx, 4)] : 'opacity-0'}`}>
-                      <span className="text-xs font-black">{day}</span>
+                    <th key={i} className={`p-3 text-center border-b border-gray-100 dark:border-slate-800 w-12 min-w-[48px] ${isVisible ? PASTEL_WEEKS[Math.min(weekIdx, 4)] : 'opacity-0'}`}>
+                      <span className="text-xs font-black text-slate-700 dark:text-slate-800">{day}</span>
                     </th>
                   );
                 })}
-                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 border-l border-slate-100">Days Done</th>
-                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100">% Done</th>
-                <th className="p-4 md:p-8 text-right text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-gray-100 min-w-[160px]">Consistency</th>
+                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 border-l border-slate-100 dark:border-l-slate-800">Days Done</th>
+                <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800">% Done</th>
+                <th className="p-4 md:p-8 text-right text-xs font-black text-slate-400 uppercase tracking-[0.2em] border-b border-gray-100 dark:border-slate-800 min-w-[160px]">Consistency</th>
               </tr>
             </thead>
             <tbody>
@@ -537,10 +558,10 @@ const HabitTracker = () => {
                 const progress = Math.round((doneCount / daysInMonth) * 100);
 
                 return (
-                  <tr key={habit.id} className="group hover:bg-slate-50/50 transition-colors border-b border-gray-50 last:border-0">
-                    <td className="p-4 md:p-8 sticky left-0 bg-white group-hover:bg-slate-50/50 z-20 border-r border-gray-100">
+                  <tr key={habit.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors border-b border-gray-50 dark:border-slate-800 last:border-0">
+                    <td className="p-4 md:p-8 sticky left-0 bg-white dark:bg-slate-900 group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/50 z-20 border-r border-gray-100 dark:border-slate-800">
                       <input
-                        className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600"
+                        className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 dark:text-white w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
                         value={habit.name}
                         onChange={e => {
                           const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
@@ -549,12 +570,12 @@ const HabitTracker = () => {
                       />
                     </td>
                     <td className="p-4 text-center">
-                      <div className="bg-slate-100 px-3 py-1.5 rounded-full flex items-center justify-center gap-1 w-fit mx-auto transition-all hover:bg-slate-200 border border-slate-200 group-hover:border-indigo-200">
+                      <div className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full flex items-center justify-center gap-1 w-fit mx-auto transition-all hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 group-hover:border-indigo-200 dark:group-hover:border-indigo-900">
                         <input
                           type="number"
                           value={habit.goal}
                           onChange={e => updateGoal(habit.id, parseInt(e.target.value) || 0)}
-                          className="w-8 bg-transparent border-none text-right font-black text-slate-800 focus:ring-0 outline-none p-0 text-sm appearance-none"
+                          className="w-8 bg-transparent border-none text-right font-black text-slate-800 dark:text-white focus:ring-0 outline-none p-0 text-sm appearance-none"
                         />
                         <input
                           type="text"
@@ -570,13 +591,13 @@ const HabitTracker = () => {
                       const isVisible = day <= daysInMonth;
                       const isAnimating = animatingHabitId === `${habit.id}-${dayIdx}`;
                       return (
-                        <td key={dayIdx} className={`p-1.5 text-center ${!isVisible && 'bg-slate-50/30 opacity-20'}`}>
+                        <td key={dayIdx} className={`p-1.5 text-center ${!isVisible && 'bg-slate-50/30 dark:bg-slate-800/30 opacity-20'}`}>
                           {isVisible && (
                             <div
                               onClick={() => toggleCheck(habit.id, dayIdx)}
                               className={`w-8 h-8 mx-auto rounded-xl cursor-pointer transition-all flex items-center justify-center border-2 ${checked
-                                ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100'
-                                : 'bg-white border-slate-200 hover:border-indigo-300'
+                                ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100 dark:shadow-none'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500'
                                 } ${isAnimating ? 'checkbox-anim' : ''} active:scale-90`}
                             >
                               {checked && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
@@ -585,11 +606,11 @@ const HabitTracker = () => {
                         </td>
                       );
                     })}
-                    <td className="p-4 text-center border-l border-slate-50 font-black text-slate-700">{doneCount}</td>
-                    <td className="p-4 text-center font-black text-indigo-600">{progress}%</td>
+                    <td className="p-4 text-center border-l border-slate-50 dark:border-slate-800 font-black text-slate-700 dark:text-slate-200">{doneCount}</td>
+                    <td className="p-4 text-center font-black text-indigo-600 dark:text-indigo-400">{progress}%</td>
                     <td className="p-4 md:p-8">
                       <div className="flex items-center gap-4">
-                        <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden border border-gray-100 shadow-inner">
+                        <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden border border-gray-100 dark:border-slate-700 shadow-inner">
                           <div
                             className={`h-full transition-all duration-700 ease-out rounded-full ${progress === 100 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : progress > 50 ? 'bg-indigo-500' : 'bg-slate-400'
                               }`}
@@ -603,15 +624,15 @@ const HabitTracker = () => {
               })}
             </tbody>
             <tfoot>
-              <tr className="bg-slate-50 border-t-2 border-slate-200">
-                <td className="p-4 md:p-8 sticky left-0 bg-slate-50 z-20 font-black text-slate-900 uppercase tracking-widest text-xs border-r border-gray-200">
+              <tr className="bg-slate-50 dark:bg-slate-800/50 border-t-2 border-slate-200 dark:border-slate-800">
+                <td className="p-4 md:p-8 sticky left-0 bg-slate-50 dark:bg-slate-900 z-20 font-black text-slate-900 dark:text-white uppercase tracking-widest text-xs border-r border-gray-200 dark:border-slate-800">
                   Monthly Average
                 </td>
                 <td colSpan={32}></td>
-                <td className="p-4 text-center font-black text-slate-800 text-sm border-l border-slate-200">
+                <td className="p-4 text-center font-black text-slate-800 dark:text-white text-sm border-l border-slate-200 dark:border-slate-800">
                   {Math.round(habits.reduce((acc, h) => acc + h.checks.slice(0, daysInMonth).filter(Boolean).length, 0) / (habits.length || 1))}
                 </td>
-                <td className="p-4 text-center font-black text-indigo-600 text-sm">
+                <td className="p-4 text-center font-black text-indigo-600 dark:text-indigo-400 text-sm">
                   {Math.round(habits.reduce((acc, h) => acc + (h.checks.slice(0, daysInMonth).filter(Boolean).length / daysInMonth) * 100, 0) / (habits.length || 1))}%
                 </td>
                 <td></td>
