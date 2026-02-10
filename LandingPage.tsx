@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { usePWAInstall } from './usePWAInstall';
 
 
 interface LandingPageProps {
@@ -9,6 +10,7 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isInstallable, install } = usePWAInstall();
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden transition-colors duration-300">
@@ -119,12 +121,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                 <p className="text-base md:text-lg lg:text-xl text-slate-500 dark:text-slate-400 font-medium max-w-2xl mx-auto mb-10 leading-relaxed">
                     Stop relying on motivation. Build habits that stick with the ultimate visual tracker for students and creators.
                 </p>
-                <button
-                    onClick={onLoginClick}
-                    className="bg-indigo-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl text-base md:text-lg font-bold hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-200 hover:shadow-indigo-300 ring-4 ring-indigo-50"
-                >
-                    Start Tracking for Free
-                </button>
+                <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+                    <button
+                        onClick={onLoginClick}
+                        className="bg-indigo-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl text-base md:text-lg font-bold hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-indigo-200 hover:shadow-indigo-300 ring-4 ring-indigo-50"
+                    >
+                        Start Tracking for Free
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (isInstallable) {
+                                install();
+                            } else {
+                                alert('App is either already installed or installation is not supported in this browser/mode.');
+                            }
+                        }}
+                        className="bg-white text-slate-900 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl text-base md:text-lg font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-100 dark:shadow-none"
+                    >
+                        Install App
+                    </button>
+                </div>
 
                 {/* 3D Dashboard Preview (Placeholder) */}
                 <div className="mt-16 mx-auto max-w-5xl transform hover:scale-[1.01] transition-transform duration-500">
