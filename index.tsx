@@ -4,6 +4,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { createRoot } from 'react-dom/client';
 import { LoginOverlay } from './LoginOverlay';
 import { LandingPage } from './LandingPage';
+import ConsistencyCalendar from './ConsistencyCalendar';
 import { auth } from './firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { loadHabitProgress, loadHabitConfigs, saveHabitProgress, saveHabitConfigs } from './firestore-service';
@@ -375,32 +376,67 @@ const HabitTracker = () => {
             const [y, m] = mKey.split('-').map(Number);
             const daysInM = new Date(y, m, 0).getDate();
 
-            // Get habit names from configs or default
-            const habitNames = Object.keys(configData).length > 0
-              ? Object.keys(configData)
-              : INITIAL_HABIT_CONFIGS.map(h => h.name);
+            // Get habit keys from configs (now IDs or Names)
+            const configKeys = Object.keys(configData);
 
-            const monthHabits: Habit[] = habitNames.map((name, idx) => {
-              const config = configData[name] || INITIAL_HABIT_CONFIGS.find(c => c.name === name) || { goal: 10, unit: 'units' };
+            // If completely new user or empty, fallback to default names BUT we need to give them IDs if we want to move to ID-based system.
+            // For now, if configData is empty, we use defaults.
+            let habitItems: any[] = [];
+
+            if (configKeys.length > 0) {
+              // Build from saved configs
+              habitItems = configKeys.map(key => ({
+                ...configData[key],
+                id: configData[key].id || key, // Fallback to key if ID missing
+                name: configData[key].name || key // Fallback to key if name missing
+              }));
+            } else {
+              // Defaults
+              habitItems = INITIAL_HABIT_CONFIGS.map((h, i) => ({ ...h, id: (i + 1).toString() }));
+            }
+
+            const monthHabits: Habit[] = habitItems.map((item) => {
               const checks = new Array(31).fill(false);
 
               // Fill checks from progressData
-              if (progressData && progressData[name]) {
-                Object.entries(progressData[name]).forEach(([dateStr, checked]) => {
-                  if (dateStr.startsWith(mKey) && checked) {
-                    const day = parseInt(dateStr.split('-')[2]);
-                    if (day > 0 && day <= daysInM) {
-                      checks[day - 1] = true;
+              // Progressive migration: Check if progress is under ID or Name
+              // We prefer ID if available in item.
+              const lookupKey = item.name; // Currently saveHabitProgress uses NAME. We need to support ID eventually, but for now let's keep NAME to not break history, BUT we must ensure uniqueness.
+              // Actually, the bug is that "New Routine" duplicates share the same lookupKey.
+              // to fix this without breaking old data:
+              // We should start saving progress under ID.
+
+              // Let's look for progress under Name first (legacy) then ID? 
+              // Or just Name. If we have duplicate names, they will share progress.
+              // The robust fix is to switch `saveHabitProgress` to use ID.
+
+              // For now, let's load what we can.
+              if (progressData) {
+                // Check by Name (Legacy)
+                if (progressData[item.name]) {
+                  Object.entries(progressData[item.name]).forEach(([dateStr, checked]) => {
+                    if (dateStr.startsWith(mKey) && checked) {
+                      const day = parseInt(dateStr.split('-')[2]);
+                      if (day > 0 && day <= daysInM) checks[day - 1] = true;
                     }
-                  }
-                });
+                  });
+                }
+                // Check by ID (Future/Fix)
+                if (progressData[item.id]) {
+                  Object.entries(progressData[item.id]).forEach(([dateStr, checked]) => {
+                    if (dateStr.startsWith(mKey) && checked) {
+                      const day = parseInt(dateStr.split('-')[2]);
+                      if (day > 0 && day <= daysInM) checks[day - 1] = true;
+                    }
+                  });
+                }
               }
 
               return {
-                id: (config as any).id || (idx + 1).toString(), // Fallback ID
-                name: name,
-                goal: (config as any).goal,
-                unit: (config as any).unit,
+                id: item.id,
+                name: item.name,
+                goal: item.goal,
+                unit: item.unit,
                 checks
               };
             });
@@ -426,7 +462,8 @@ const HabitTracker = () => {
         // Fire and forget Firestore update
         if (user) {
           const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayIdx + 1).padStart(2, '0')}`;
-          saveHabitProgress(user.uid, h.name, dateStr, nc[dayIdx]);
+          // Use ID for robustness, fallback to default behavior if needed? No, ID is always present now.
+          saveHabitProgress(user.uid, h.id, dateStr, nc[dayIdx]);
         }
 
         return { ...h, checks: nc };
@@ -575,6 +612,40 @@ const HabitTracker = () => {
         </div>
       </section>
 
+      {/* MONTHLY CONSISTENCY */}
+      <section className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+        <div className="bg-white dark:bg-slate-900 rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm border border-gray-100 dark:border-slate-800 hover:scale-[1.01] hover:shadow-xl transition-all duration-300 flex flex-col items-center">
+          <div className="w-full flex justify-between items-center mb-6">
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Consistency Calendar</h3>
+            <p className="text-slate-400 font-medium">Daily completion visualization</p>
+          </div>
+          <ConsistencyCalendar data={(() => {
+            const data: { [key: string]: { percentage: number; count: number; total: number } } = {};
+
+            // Merge allData with current habits and type it explicitly
+            const combinedData: Record<string, Habit[]> = { ...allData, [monthKey]: habits };
+
+            Object.entries(combinedData).forEach(([mKey, monthHabits]) => {
+              const [y, m] = mKey.split('-').map(Number);
+              const daysInM = new Date(y, m, 0).getDate();
+              for (let d = 1; d <= daysInM; d++) {
+                const dateKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const completedCount = monthHabits.filter(h => h.checks[d - 1] === true).length;
+                const total = monthHabits.length;
+                if (total > 0) {
+                  data[dateKey] = {
+                    percentage: Math.round((completedCount / total) * 100),
+                    count: completedCount,
+                    total: total
+                  };
+                }
+              }
+            });
+            return data;
+          })()} />
+        </div>
+      </section>
+
       {/* MAIN HABIT GRID */}
       <div className="bg-white dark:bg-slate-900 rounded-[40px] shadow-sm border border-gray-100 dark:border-slate-800 ring-1 dark:ring-white/5 overflow-hidden animate-fade-in-up hover:shadow-xl transition-all duration-300" style={{ animationDelay: '200ms' }}>
         <div className="overflow-x-auto scrollbar-thin">
@@ -699,8 +770,12 @@ const HabitTracker = () => {
       <div className="flex flex-col items-center gap-8 py-10 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
         <button
           onClick={() => {
-            const newHabits = [...habits, { id: Date.now().toString(), name: 'New Routine', goal: 10, unit: 'mins', checks: new Array(31).fill(false) }];
+            const newHabit = { id: Date.now().toString(), name: 'New Routine', goal: 10, unit: 'mins', checks: new Array(31).fill(false) };
+            const newHabits = [...habits, newHabit];
             setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+            if (user) {
+              saveHabitConfigs(user.uid, newHabits);
+            }
           }}
           className="group flex items-center gap-3 bg-indigo-600 text-white px-6 py-4 md:px-10 md:py-5 rounded-[24px] font-black text-base md:text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200 hover:-translate-y-1 active:scale-95"
         >

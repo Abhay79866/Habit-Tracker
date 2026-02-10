@@ -42,7 +42,9 @@ export const saveHabitConfigs = async (uid: string, habits: any[]) => {
     try {
         const userDocRef = doc(db, 'users', uid);
         const configs = habits.reduce((acc, h) => {
-            acc[h.name] = { goal: h.goal, unit: h.unit, id: h.id };
+            // Use ID as the key for robustness, fallback to name if no ID (legacy)
+            const key = h.id || h.name;
+            acc[key] = { goal: h.goal, unit: h.unit, id: h.id, name: h.name };
             return acc;
         }, {});
         await setDoc(userDocRef, { habitConfigs: configs }, { merge: true });
