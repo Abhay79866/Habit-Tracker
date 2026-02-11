@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { usePWAInstall } from './usePWAInstall';
@@ -281,8 +282,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <div>
                         <h4 className="font-black text-slate-900 dark:text-white mb-4">Links</h4>
                         <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                            <li><a href="#" className="hover:text-indigo-600">Privacy Policy</a></li>
-                            <li><a href="#" className="hover:text-indigo-600">Terms of Service</a></li>
+                            <li><Link to="/privacy" className="hover:text-indigo-600">Privacy Policy</Link></li>
+                            <li><Link to="/terms" className="hover:text-indigo-600">Terms of Service</Link></li>
+                            <li><Link to="/refund" className="hover:text-indigo-600">Refund Policy</Link></li>
+                            <li><Link to="/contact" className="hover:text-indigo-600">Contact Us</Link></li>
                             <li><a href="#" className="hover:text-indigo-600">Twitter / X</a></li>
                         </ul>
                     </div>

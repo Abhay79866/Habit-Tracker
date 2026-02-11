@@ -9,6 +9,11 @@ import { auth } from './firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { loadHabitProgress, loadHabitConfigs, saveHabitProgress, saveHabitConfigs } from './firestore-service';
 import { logOut } from './auth-service';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import PrivacyPolicy from './src/pages/legal/PrivacyPolicy';
+import TermsOfService from './src/pages/legal/TermsOfService';
+import RefundPolicy from './src/pages/legal/RefundPolicy';
+import ContactUs from './src/pages/legal/ContactUs';
 import {
   Chart,
   ArcElement,
@@ -792,5 +797,17 @@ const HabitTracker = () => {
   );
 };
 
+const App = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<HabitTracker />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/refund" element={<RefundPolicy />} />
+      <Route path="/contact" element={<ContactUs />} />
+    </Routes>
+  </BrowserRouter>
+);
+
 const root = createRoot(document.getElementById('root')!);
-root.render(<HabitTracker />);
+root.render(<App />);
