@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { InstallPWA } from './InstallPWA';
+
 import { ThemeToggle } from './ThemeToggle';
 import { createRoot } from 'react-dom/client';
 import { LoginOverlay } from './LoginOverlay';
@@ -519,14 +519,14 @@ const HabitTracker = () => {
       <>
         <LandingPage onLoginClick={() => setShowLogin(true)} />
         {showLogin && <LoginOverlay onClose={() => setShowLogin(false)} />}
-        <InstallPWA />
+
       </>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 p-4 md:p-6 lg:p-8 space-y-8 font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-300">
-      <InstallPWA />
+
       {/* HEADER ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
         <div className="bg-white dark:bg-slate-900 rounded-[40px] p-6 md:p-8 lg:p-10 shadow-sm flex flex-col justify-between border border-gray-100 dark:border-slate-800 ring-1 dark:ring-white/5 hover:scale-[1.01] hover:shadow-xl transition-all duration-300">
