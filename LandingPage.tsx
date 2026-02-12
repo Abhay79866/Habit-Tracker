@@ -4,8 +4,7 @@ import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { usePWAInstall } from './usePWAInstall';
 import { BuyMeCoffee } from './BuyMeCoffee';
-import { IOSInstallModal } from './IOSInstallModal';
-
+import { PWAInstallModal } from './PWAInstallModal';
 
 
 interface LandingPageProps {
@@ -14,25 +13,16 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { isInstallable, install, isIOS } = usePWAInstall();
-    const [showIOSModal, setShowIOSModal] = useState(false);
-
-    const handleInstall = async () => {
-        if (isInstallable) {
-            const result = await install();
-            if (result === 'ios_instructions') {
-                setShowIOSModal(true);
-            } else if (result === 'failed') {
-                alert('App is either already installed or installation is not supported in this browser/mode.');
-            }
-        } else {
-            alert('App is either already installed or installation is not supported in this browser/mode.');
-        }
-    };
+    const { platform, isInstalled } = usePWAInstall();
+    const [showInstallModal, setShowInstallModal] = useState(false);
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden transition-colors duration-300">
-            <IOSInstallModal isOpen={showIOSModal} onClose={() => setShowIOSModal(false)} />
+            <PWAInstallModal
+                isOpen={showInstallModal}
+                onClose={() => setShowInstallModal(false)}
+                platform={platform}
+            />
 
             {/* 1. Navbar (Floating & Glassmorphism) */}
             <nav className="fixed top-4 left-4 right-4 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-white/20 dark:border-slate-800/50 shadow-xl shadow-indigo-100 dark:shadow-none max-w-7xl mx-auto rounded-2xl transition-all duration-300">
@@ -148,12 +138,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     >
                         Start Tracking for Free
                     </button>
-                    <button
-                        onClick={handleInstall}
-                        className="bg-white text-slate-900 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl text-base md:text-lg font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-100 dark:shadow-none"
-                    >
-                        Install App
-                    </button>
+                    {!isInstalled && (
+                        <button
+                            onClick={() => setShowInstallModal(true)}
+                            className="bg-white text-slate-900 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white px-6 py-3 md:px-8 md:py-4 rounded-2xl text-base md:text-lg font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-100 dark:shadow-none"
+                        >
+                            Install App
+                        </button>
+                    )}
                 </div>
 
                 {/* 3D Dashboard Preview (Placeholder) */}
