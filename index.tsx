@@ -537,14 +537,7 @@ const HabitTracker = () => {
     return () => clearTimeout(timer);
   }, [habits, currentMonth, currentYear, isDarkMode]); // Re-render charts when data or date or theme changes
 
-  // Show loading spinner
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
+
 
   // If not authenticated, show Landing Page
   if (!user) {
