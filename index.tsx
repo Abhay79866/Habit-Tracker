@@ -154,7 +154,14 @@ const HabitTracker = () => {
   const [allData, setAllData] = useState<Record<string, Habit[]>>({});
 
   const habits = useMemo(() => {
-    if (allData[monthKey]) return allData[monthKey];
+    if (allData[monthKey]) {
+      const monthHabits = allData[monthKey];
+      // Safety: Remove duplicates based on ID
+      const uniqueHabits = monthHabits.filter((habit, index, self) =>
+        index === self.findIndex((t) => t.id === habit.id)
+      );
+      return uniqueHabits;
+    }
     const keys = Object.keys(allData).sort().reverse();
     if (keys.length > 0) {
       // Inherit names and units from most recent entry, but reset checks
@@ -380,11 +387,30 @@ const HabitTracker = () => {
 
             if (configKeys.length > 0) {
               // Build from saved configs
-              habitItems = configKeys.map(key => ({
+              const rawItems = configKeys.map(key => ({
                 ...configData[key],
                 id: configData[key].id || key, // Fallback to key if ID missing
                 name: configData[key].name || key // Fallback to key if name missing
               }));
+
+              // DE-DUPLICATION LOGIC:
+              // 1. Prefer items with numeric IDs (1-10) over string IDs (Legacy Names)
+              // 2. Remove items with duplicate Names (keep the one with numeric ID)
+              const seenNames = new Set();
+              // Sort so numeric IDs come first (simplified check: if id is number-like)
+              rawItems.sort((a, b) => {
+                const aIsNum = !isNaN(Number(a.id));
+                const bIsNum = !isNaN(Number(b.id));
+                if (aIsNum && !bIsNum) return -1;
+                if (!aIsNum && bIsNum) return 1;
+                return 0;
+              });
+
+              habitItems = rawItems.filter(item => {
+                if (seenNames.has(item.name)) return false;
+                seenNames.add(item.name);
+                return true;
+              });
             } else {
               // Defaults
               habitItems = INITIAL_HABIT_CONFIGS.map((h, i) => ({ ...h, id: (i + 1).toString() }));
