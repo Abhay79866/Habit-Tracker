@@ -345,21 +345,15 @@ const HabitTracker = () => {
       setUser(currentUser);
       if (currentUser) {
         // Load data from Firestore
-        const [progressData, configData] = await Promise.all([
+        const [progressData, configResult] = await Promise.all([
           loadHabitProgress(currentUser.uid),
           loadHabitConfigs(currentUser.uid)
         ]);
 
-        if (progressData || configData) {
-          // Transform Firestore data back to `allData` structure
-          // This is a simplified merge strategy: local vs remote.
-          // For now, we overwrite local state with remote if remote exists to ensure sync.
+        const { habitConfigs, monthlyConfigs } = configResult || { habitConfigs: {}, monthlyConfigs: {} };
 
-          /*
-             Transformation Logic:
-             We need to reconstruct `allData` (Record<monthKey, Habit[]>) from `progressData` (Habit -> Date -> Bool).
-                    Since `progressData` is just checks, we need `configData` for metadata (Goal, Unit).
-                    */
+        if (progressData || habitConfigs) {
+          // Transform Firestore data back to `allData` structure
 
           const newAllData: Record<string, Habit[]> = {};
 
@@ -381,19 +375,22 @@ const HabitTracker = () => {
             const [y, m] = mKey.split('-').map(Number);
             const daysInM = new Date(y, m, 0).getDate();
 
-            // Get habit keys from configs (now IDs or Names)
-            const configKeys = Object.keys(configData);
+            // RESOLVE CONFIG FOR THIS MONTH
+            // Priority: Specific Month Config > Global Config > Empty
+            let activeConfig = monthlyConfigs[mKey] || habitConfigs;
 
-            // If completely new user or empty, fallback to default names BUT we need to give them IDs if we want to move to ID-based system.
-            // For now, if configData is empty, we use defaults.
+            // If activeConfig is just an object of keys, ensure we have the right structure
+            // If it's completely empty, we might fall back to defaults later
+            const configKeys = Object.keys(activeConfig);
+
             let habitItems: any[] = [];
 
             if (configKeys.length > 0) {
               // Build from saved configs
               habitItems = configKeys.map(key => ({
-                ...configData[key],
-                id: configData[key].id || key, // Fallback to key if ID missing
-                name: configData[key].name || key // Fallback to key if name missing
+                ...activeConfig[key],
+                id: activeConfig[key].id || key, // Fallback to key if ID missing
+                name: activeConfig[key].name || key // Fallback to key if name missing
               }));
               // Sort by order if available
               habitItems.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -416,19 +413,6 @@ const HabitTracker = () => {
             const monthHabits: Habit[] = habitItems.map((item) => {
               const checks = new Array(31).fill(false);
 
-              // Fill checks from progressData
-              // Progressive migration: Check if progress is under ID or Name
-              // We prefer ID if available in item.
-              const lookupKey = item.name; // Currently saveHabitProgress uses NAME. We need to support ID eventually, but for now let's keep NAME to not break history, BUT we must ensure uniqueness.
-              // Actually, the bug is that "New Routine" duplicates share the same lookupKey.
-              // to fix this without breaking old data:
-              // We should start saving progress under ID.
-
-              // Let's look for progress under Name first (legacy) then ID? 
-              // Or just Name. If we have duplicate names, they will share progress.
-              // The robust fix is to switch `saveHabitProgress` to use ID.
-
-              // For now, let's load what we can.
               if (progressData) {
                 // Check by Name (Legacy)
                 if (progressData[item.name]) {
@@ -496,7 +480,7 @@ const HabitTracker = () => {
     const newHabits = habits.map(h => h.id === id ? { ...h, goal: newGoal } : h);
     setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
     if (user) {
-      saveHabitConfigs(user.uid, newHabits);
+      saveHabitConfigs(user.uid, newHabits, monthKey);
     }
   };
 
@@ -504,7 +488,7 @@ const HabitTracker = () => {
     const newHabits = habits.map(h => h.id === id ? { ...h, unit: newUnit } : h);
     setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
     if (user) {
-      saveHabitConfigs(user.uid, newHabits);
+      saveHabitConfigs(user.uid, newHabits, monthKey);
     }
   };
 
@@ -703,7 +687,7 @@ const HabitTracker = () => {
                             const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
                             setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
                           }}
-                          onBlur={() => user && saveHabitConfigs(user.uid, habits)}
+                          onBlur={() => user && saveHabitConfigs(user.uid, habits, monthKey)}
                         />
                         {calculateStreak(habit.name, allData) >= 3 && (
                           <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full animate-bounce-slow">
@@ -793,7 +777,7 @@ const HabitTracker = () => {
             const newHabits = [...habits, newHabit];
             setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
             if (user) {
-              saveHabitConfigs(user.uid, newHabits);
+              saveHabitConfigs(user.uid, newHabits, monthKey);
             }
           }}
           className="group flex items-center gap-3 bg-indigo-600 text-white px-6 py-4 md:px-10 md:py-5 rounded-[24px] font-black text-base md:text-lg hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-200 hover:-translate-y-1 active:scale-95"

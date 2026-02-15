@@ -38,7 +38,8 @@ export const saveHabitProgress = async (uid: string, habitName: string, date: st
     }
 };
 
-export const saveHabitConfigs = async (uid: string, habits: any[]) => {
+// Updated to support monthly configs
+export const saveHabitConfigs = async (uid: string, habits: any[], monthKey?: string) => {
     try {
         const userDocRef = doc(db, 'users', uid);
         const configs = habits.reduce((acc, h, index) => {
@@ -48,12 +49,22 @@ export const saveHabitConfigs = async (uid: string, habits: any[]) => {
             return acc;
         }, {});
 
-        // Try to update just the field to replace the map (avoids merging old keys)
+        const dataToUpdate: any = {};
+
+        if (monthKey) {
+            // Save to specific month
+            dataToUpdate[`monthlyConfigs.${monthKey}`] = configs;
+        } else {
+            // Save as default/legacy (fallback)
+            dataToUpdate['habitConfigs'] = configs;
+        }
+
+        // Try to update just the field
         try {
-            await updateDoc(userDocRef, { habitConfigs: configs });
+            await updateDoc(userDocRef, dataToUpdate);
         } catch (e) {
             // If doc doesn't exist, create it
-            await setDoc(userDocRef, { habitConfigs: configs }, { merge: true });
+            await setDoc(userDocRef, dataToUpdate, { merge: true });
         }
     } catch (error) {
         console.error("Error saving habit configs:", error);
@@ -65,11 +76,15 @@ export const loadHabitConfigs = async (uid: string) => {
         const userDocRef = doc(db, 'users', uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-            return userDoc.data().habitConfigs || {};
+            const data = userDoc.data();
+            return {
+                habitConfigs: data.habitConfigs || {},
+                monthlyConfigs: data.monthlyConfigs || {}
+            };
         }
-        return {};
+        return { habitConfigs: {}, monthlyConfigs: {} };
     } catch (error) {
         console.error("Error loading habit configs:", error);
-        return {};
+        return { habitConfigs: {}, monthlyConfigs: {} };
     }
 };
