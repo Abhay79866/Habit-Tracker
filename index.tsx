@@ -151,23 +151,7 @@ const HabitTracker = () => {
   };
 
 
-  const [allData, setAllData] = useState<Record<string, Habit[]>>(() => {
-    const saved = localStorage.getItem('habit-v8-data');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        Object.keys(parsed).forEach(key => {
-          parsed[key] = parsed[key].map((h: any) => ({
-            ...h,
-            goal: h.goal ?? 20,
-            unit: h.unit ?? 'mins'
-          }));
-        });
-        return parsed;
-      } catch (e) { return {}; }
-    }
-    return {};
-  });
+  const [allData, setAllData] = useState<Record<string, Habit[]>>({});
 
   const habits = useMemo(() => {
     if (allData[monthKey]) return allData[monthKey];
@@ -179,7 +163,7 @@ const HabitTracker = () => {
         checks: new Array(31).fill(false)
       }));
     }
-    return createDefaultHabits();
+    return [];
   }, [allData, monthKey]);
 
   const lineChartRef = useRef<HTMLCanvasElement>(null);
@@ -361,6 +345,12 @@ const HabitTracker = () => {
                     Since `progressData` is just checks, we need `configData` for metadata (Goal, Unit).
                     */
 
+          // 0. If New User (no configData), save defaults immediately
+          if (!configData || Object.keys(configData).length === 0) {
+            const defaultHabits = INITIAL_HABIT_CONFIGS.map((h, i) => ({ ...h, id: (i + 1).toString() }));
+            saveHabitConfigs(currentUser.uid, defaultHabits);
+          }
+
           const newAllData: Record<string, Habit[]> = {};
 
           // Helper to get month key from date string YYYY-MM-DD
@@ -521,13 +511,21 @@ const HabitTracker = () => {
     return () => clearTimeout(timer);
   }, [habits, currentMonth, currentYear, isDarkMode]); // Re-render charts when data or date or theme changes
 
+  // Show loading spinner
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   // If not authenticated, show Landing Page
-  if (!loading && !user) {
+  if (!user) {
     return (
       <>
         <LandingPage onLoginClick={() => setShowLogin(true)} />
         {showLogin && <LoginOverlay onClose={() => setShowLogin(false)} />}
-
       </>
     );
   }
