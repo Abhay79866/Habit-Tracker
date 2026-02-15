@@ -495,6 +495,14 @@ const HabitTracker = () => {
     }
   };
 
+  const updateHabitName = (id: string, newName: string) => {
+    const newHabits = habits.map(h => h.id === id ? { ...h, name: newName } : h);
+    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+    if (user) {
+      saveHabitConfigs(user.uid, newHabits);
+    }
+  };
+
   // Logout Handler
   const handleLogout = () => {
     logOut();
@@ -686,10 +694,7 @@ const HabitTracker = () => {
                         <input
                           className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 dark:text-white w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
                           value={habit.name}
-                          onChange={e => {
-                            const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
-                            setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
-                          }}
+                          onChange={e => updateHabitName(habit.id, e.target.value)}
                         />
                         {calculateStreak(habit.name, allData) >= 3 && (
                           <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full animate-bounce-slow">
