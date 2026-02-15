@@ -41,13 +41,20 @@ export const saveHabitProgress = async (uid: string, habitName: string, date: st
 export const saveHabitConfigs = async (uid: string, habits: any[]) => {
     try {
         const userDocRef = doc(db, 'users', uid);
-        const configs = habits.reduce((acc, h) => {
+        const configs = habits.reduce((acc, h, index) => {
             // Use ID as the key for robustness, fallback to name if no ID (legacy)
             const key = h.id || h.name;
-            acc[key] = { goal: h.goal, unit: h.unit, id: h.id, name: h.name };
+            acc[key] = { goal: h.goal, unit: h.unit, id: h.id, name: h.name, order: index };
             return acc;
         }, {});
-        await setDoc(userDocRef, { habitConfigs: configs }, { merge: true });
+
+        // Try to update just the field to replace the map (avoids merging old keys)
+        try {
+            await updateDoc(userDocRef, { habitConfigs: configs });
+        } catch (e) {
+            // If doc doesn't exist, create it
+            await setDoc(userDocRef, { habitConfigs: configs }, { merge: true });
+        }
     } catch (error) {
         console.error("Error saving habit configs:", error);
     }

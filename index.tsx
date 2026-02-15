@@ -71,7 +71,14 @@ const INITIAL_HABIT_CONFIGS = [
   { name: 'No Sugar', goal: 1, unit: 'day' }
 ];
 
-
+const createDefaultHabits = (): Habit[] =>
+  INITIAL_HABIT_CONFIGS.map((config, i) => ({
+    id: (i + 1).toString(),
+    name: config.name,
+    goal: config.goal,
+    unit: config.unit,
+    checks: new Array(31).fill(false)
+  }));
 
 const PASTEL_WEEKS = [
   'bg-rose-50 text-rose-600',   // Week 1
@@ -144,17 +151,26 @@ const HabitTracker = () => {
   };
 
 
-  const [allData, setAllData] = useState<Record<string, Habit[]>>({});
+  const [allData, setAllData] = useState<Record<string, Habit[]>>(() => {
+    const saved = localStorage.getItem('habit-v8-data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach(key => {
+          parsed[key] = parsed[key].map((h: any) => ({
+            ...h,
+            goal: h.goal ?? 20,
+            unit: h.unit ?? 'mins'
+          }));
+        });
+        return parsed;
+      } catch (e) { return {}; }
+    }
+    return {};
+  });
 
   const habits = useMemo(() => {
-    if (allData[monthKey]) {
-      const monthHabits = allData[monthKey];
-      // Safety: Remove duplicates based on ID
-      const uniqueHabits = monthHabits.filter((habit, index, self) =>
-        index === self.findIndex((t) => t.id === habit.id)
-      );
-      return uniqueHabits;
-    }
+    if (allData[monthKey]) return allData[monthKey];
     const keys = Object.keys(allData).sort().reverse();
     if (keys.length > 0) {
       // Inherit names and units from most recent entry, but reset checks
@@ -163,7 +179,7 @@ const HabitTracker = () => {
         checks: new Array(31).fill(false)
       }));
     }
-    return [];
+    return createDefaultHabits();
   }, [allData, monthKey]);
 
   const lineChartRef = useRef<HTMLCanvasElement>(null);
@@ -345,12 +361,6 @@ const HabitTracker = () => {
                     Since `progressData` is just checks, we need `configData` for metadata (Goal, Unit).
                     */
 
-          // 0. If New User (no configData), save defaults immediately
-          if (!configData || Object.keys(configData).length === 0) {
-            const defaultHabits = INITIAL_HABIT_CONFIGS.map((h, i) => ({ ...h, id: (i + 1).toString() }));
-            saveHabitConfigs(currentUser.uid, defaultHabits);
-          }
-
           const newAllData: Record<string, Habit[]> = {};
 
           // Helper to get month key from date string YYYY-MM-DD
@@ -380,33 +390,27 @@ const HabitTracker = () => {
 
             if (configKeys.length > 0) {
               // Build from saved configs
-              const rawItems = configKeys.map(key => ({
+              habitItems = configKeys.map(key => ({
                 ...configData[key],
                 id: configData[key].id || key, // Fallback to key if ID missing
                 name: configData[key].name || key // Fallback to key if name missing
               }));
+              // Sort by order if available
+              habitItems.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-              // DE-DUPLICATION LOGIC:
-              // 1. Prefer items with numeric IDs (1-10) over string IDs (Legacy Names)
-              // 2. Remove items with duplicate Names (keep the one with numeric ID)
+              // Deduplicate by name
               const seenNames = new Set();
-              // Sort so numeric IDs come first (simplified check: if id is number-like)
-              rawItems.sort((a, b) => {
-                const aIsNum = !isNaN(Number(a.id));
-                const bIsNum = !isNaN(Number(b.id));
-                if (aIsNum && !bIsNum) return -1;
-                if (!aIsNum && bIsNum) return 1;
-                return 0;
-              });
-
-              habitItems = rawItems.filter(item => {
-                if (seenNames.has(item.name)) return false;
-                seenNames.add(item.name);
-                return true;
-              });
+              const uniqueItems = [];
+              for (const item of habitItems) {
+                if (!seenNames.has(item.name)) {
+                  seenNames.add(item.name);
+                  uniqueItems.push(item);
+                }
+              }
+              habitItems = uniqueItems;
             } else {
               // Defaults
-              habitItems = INITIAL_HABIT_CONFIGS.map((h, i) => ({ ...h, id: (i + 1).toString() }));
+              habitItems = INITIAL_HABIT_CONFIGS.map((h, i) => ({ ...h, id: (i + 1).toString(), order: i }));
             }
 
             const monthHabits: Habit[] = habitItems.map((item) => {
@@ -488,39 +492,21 @@ const HabitTracker = () => {
     setTimeout(() => setAnimatingHabitId(null), 400);
   };
 
-  /* ------------------------------------------------------------------
-   * UPDATE HANDLERS (Global Sync)
-   * ------------------------------------------------------------------ */
-  const updateGlobalHabit = (id: string, updates: Partial<Habit>) => {
-    setAllData(prev => {
-      const next = { ...prev };
-      Object.keys(next).forEach(key => {
-        next[key] = next[key].map(h => h.id === id ? { ...h, ...updates } : h);
-      });
-      return next;
-    });
-
-    // We also need to update the current 'habits' if they are not yet in allData (rare but possible during transition)
-    // Actually, 'habits' derived from 'allData', so updating 'allData' is sufficient.
-
-    // Optimistic UI update for the current view is handled by the re-render from setAllData
-
+  const updateGoal = (id: string, newGoal: number) => {
+    const newHabits = habits.map(h => h.id === id ? { ...h, goal: newGoal } : h);
+    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
     if (user) {
-      // Find the updated habit to save
-      // We can just construct a mock habit with the updates for saving
-      // OR better: get the current habit and apply updates
-      const currentHabit = habits.find(h => h.id === id);
-      if (currentHabit) {
-        // Create the new full list for saving
-        const newHabits = habits.map(h => h.id === id ? { ...h, ...updates } : h);
-        saveHabitConfigs(user.uid, newHabits);
-      }
+      saveHabitConfigs(user.uid, newHabits);
     }
   };
 
-  const updateGoal = (id: string, newGoal: number) => updateGlobalHabit(id, { goal: newGoal });
-  const updateUnit = (id: string, newUnit: string) => updateGlobalHabit(id, { unit: newUnit });
-  const updateHabitName = (id: string, newName: string) => updateGlobalHabit(id, { name: newName });
+  const updateUnit = (id: string, newUnit: string) => {
+    const newHabits = habits.map(h => h.id === id ? { ...h, unit: newUnit } : h);
+    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+    if (user) {
+      saveHabitConfigs(user.uid, newHabits);
+    }
+  };
 
   // Logout Handler
   const handleLogout = () => {
@@ -540,39 +526,13 @@ const HabitTracker = () => {
     return () => clearTimeout(timer);
   }, [habits, currentMonth, currentYear, isDarkMode]); // Re-render charts when data or date or theme changes
 
-
-  // Memoize Calendar Data Calculation
-  const calendarData = useMemo(() => {
-    const data: { [key: string]: { percentage: number; count: number; total: number } } = {};
-    const combinedData: Record<string, Habit[]> = { ...allData, [monthKey]: habits };
-
-    Object.entries(combinedData).forEach(([mKey, monthHabits]) => {
-      const [y, m] = mKey.split('-').map(Number);
-      const daysInM = new Date(y, m, 0).getDate();
-      for (let d = 1; d <= daysInM; d++) {
-        const dateKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const completedCount = monthHabits.filter(h => h.checks[d - 1] === true).length;
-        const total = monthHabits.length;
-        if (total > 0) {
-          data[dateKey] = {
-            percentage: Math.round((completedCount / total) * 100),
-            count: completedCount,
-            total: total
-          };
-        }
-      }
-    });
-    return data;
-  }, [allData, habits, monthKey]); // Recalculate only when data changes
-
-
-
   // If not authenticated, show Landing Page
-  if (!user) {
+  if (!loading && !user) {
     return (
       <>
         <LandingPage onLoginClick={() => setShowLogin(true)} />
         {showLogin && <LoginOverlay onClose={() => setShowLogin(false)} />}
+
       </>
     );
   }
@@ -677,7 +637,30 @@ const HabitTracker = () => {
             <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Consistency Calendar</h3>
             <p className="text-slate-400 font-medium">Daily completion visualization</p>
           </div>
-          <ConsistencyCalendar data={calendarData} />
+          <ConsistencyCalendar data={(() => {
+            const data: { [key: string]: { percentage: number; count: number; total: number } } = {};
+
+            // Merge allData with current habits and type it explicitly
+            const combinedData: Record<string, Habit[]> = { ...allData, [monthKey]: habits };
+
+            Object.entries(combinedData).forEach(([mKey, monthHabits]) => {
+              const [y, m] = mKey.split('-').map(Number);
+              const daysInM = new Date(y, m, 0).getDate();
+              for (let d = 1; d <= daysInM; d++) {
+                const dateKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const completedCount = monthHabits.filter(h => h.checks[d - 1] === true).length;
+                const total = monthHabits.length;
+                if (total > 0) {
+                  data[dateKey] = {
+                    percentage: Math.round((completedCount / total) * 100),
+                    count: completedCount,
+                    total: total
+                  };
+                }
+              }
+            });
+            return data;
+          })()} />
         </div>
       </section>
 
@@ -716,7 +699,11 @@ const HabitTracker = () => {
                         <input
                           className="bg-transparent border-none focus:ring-0 font-bold text-slate-800 dark:text-white w-full outline-none placeholder-slate-300 text-sm md:text-lg transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
                           value={habit.name}
-                          onChange={e => updateHabitName(habit.id, e.target.value)}
+                          onChange={e => {
+                            const newHabits = habits.map(h => h.id === habit.id ? { ...h, name: e.target.value } : h);
+                            setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+                          }}
+                          onBlur={() => user && saveHabitConfigs(user.uid, habits)}
                         />
                         {calculateStreak(habit.name, allData) >= 3 && (
                           <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded-full animate-bounce-slow">
