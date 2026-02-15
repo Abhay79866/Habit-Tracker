@@ -71,14 +71,7 @@ const INITIAL_HABIT_CONFIGS = [
   { name: 'No Sugar', goal: 1, unit: 'day' }
 ];
 
-const createDefaultHabits = (): Habit[] =>
-  INITIAL_HABIT_CONFIGS.map((config, i) => ({
-    id: (i + 1).toString(),
-    name: config.name,
-    goal: config.goal,
-    unit: config.unit,
-    checks: new Array(31).fill(false)
-  }));
+
 
 const PASTEL_WEEKS = [
   'bg-rose-50 text-rose-600',   // Week 1
@@ -495,29 +488,39 @@ const HabitTracker = () => {
     setTimeout(() => setAnimatingHabitId(null), 400);
   };
 
-  const updateGoal = (id: string, newGoal: number) => {
-    const newHabits = habits.map(h => h.id === id ? { ...h, goal: newGoal } : h);
-    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
+  /* ------------------------------------------------------------------
+   * UPDATE HANDLERS (Global Sync)
+   * ------------------------------------------------------------------ */
+  const updateGlobalHabit = (id: string, updates: Partial<Habit>) => {
+    setAllData(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(key => {
+        next[key] = next[key].map(h => h.id === id ? { ...h, ...updates } : h);
+      });
+      return next;
+    });
+
+    // We also need to update the current 'habits' if they are not yet in allData (rare but possible during transition)
+    // Actually, 'habits' derived from 'allData', so updating 'allData' is sufficient.
+
+    // Optimistic UI update for the current view is handled by the re-render from setAllData
+
     if (user) {
-      saveHabitConfigs(user.uid, newHabits);
+      // Find the updated habit to save
+      // We can just construct a mock habit with the updates for saving
+      // OR better: get the current habit and apply updates
+      const currentHabit = habits.find(h => h.id === id);
+      if (currentHabit) {
+        // Create the new full list for saving
+        const newHabits = habits.map(h => h.id === id ? { ...h, ...updates } : h);
+        saveHabitConfigs(user.uid, newHabits);
+      }
     }
   };
 
-  const updateUnit = (id: string, newUnit: string) => {
-    const newHabits = habits.map(h => h.id === id ? { ...h, unit: newUnit } : h);
-    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
-    if (user) {
-      saveHabitConfigs(user.uid, newHabits);
-    }
-  };
-
-  const updateHabitName = (id: string, newName: string) => {
-    const newHabits = habits.map(h => h.id === id ? { ...h, name: newName } : h);
-    setAllData(prev => ({ ...prev, [monthKey]: newHabits }));
-    if (user) {
-      saveHabitConfigs(user.uid, newHabits);
-    }
-  };
+  const updateGoal = (id: string, newGoal: number) => updateGlobalHabit(id, { goal: newGoal });
+  const updateUnit = (id: string, newUnit: string) => updateGlobalHabit(id, { unit: newUnit });
+  const updateHabitName = (id: string, newName: string) => updateGlobalHabit(id, { name: newName });
 
   // Logout Handler
   const handleLogout = () => {
@@ -536,6 +539,31 @@ const HabitTracker = () => {
 
     return () => clearTimeout(timer);
   }, [habits, currentMonth, currentYear, isDarkMode]); // Re-render charts when data or date or theme changes
+
+
+  // Memoize Calendar Data Calculation
+  const calendarData = useMemo(() => {
+    const data: { [key: string]: { percentage: number; count: number; total: number } } = {};
+    const combinedData: Record<string, Habit[]> = { ...allData, [monthKey]: habits };
+
+    Object.entries(combinedData).forEach(([mKey, monthHabits]) => {
+      const [y, m] = mKey.split('-').map(Number);
+      const daysInM = new Date(y, m, 0).getDate();
+      for (let d = 1; d <= daysInM; d++) {
+        const dateKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const completedCount = monthHabits.filter(h => h.checks[d - 1] === true).length;
+        const total = monthHabits.length;
+        if (total > 0) {
+          data[dateKey] = {
+            percentage: Math.round((completedCount / total) * 100),
+            count: completedCount,
+            total: total
+          };
+        }
+      }
+    });
+    return data;
+  }, [allData, habits, monthKey]); // Recalculate only when data changes
 
 
 
@@ -649,30 +677,7 @@ const HabitTracker = () => {
             <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Consistency Calendar</h3>
             <p className="text-slate-400 font-medium">Daily completion visualization</p>
           </div>
-          <ConsistencyCalendar data={(() => {
-            const data: { [key: string]: { percentage: number; count: number; total: number } } = {};
-
-            // Merge allData with current habits and type it explicitly
-            const combinedData: Record<string, Habit[]> = { ...allData, [monthKey]: habits };
-
-            Object.entries(combinedData).forEach(([mKey, monthHabits]) => {
-              const [y, m] = mKey.split('-').map(Number);
-              const daysInM = new Date(y, m, 0).getDate();
-              for (let d = 1; d <= daysInM; d++) {
-                const dateKey = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const completedCount = monthHabits.filter(h => h.checks[d - 1] === true).length;
-                const total = monthHabits.length;
-                if (total > 0) {
-                  data[dateKey] = {
-                    percentage: Math.round((completedCount / total) * 100),
-                    count: completedCount,
-                    total: total
-                  };
-                }
-              }
-            });
-            return data;
-          })()} />
+          <ConsistencyCalendar data={calendarData} />
         </div>
       </section>
 
