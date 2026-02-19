@@ -244,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     {/* Free Plan */}
                     <div className="bg-white dark:bg-slate-900 p-6 md:p-10 rounded-[40px] border border-slate-200 dark:border-slate-800 hover:border-indigo-100 transition-all">
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Starter</h3>
-                        <div className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-6">$0<span className="text-lg text-slate-400 font-medium">/mo</span></div>
+                        <div className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-6">₹0<span className="text-lg text-slate-400 font-medium">/mo</span></div>
                         <ul className="space-y-4 mb-10">
                             <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold"><span className="text-indigo-600">✓</span> Essential Tracking</li>
                             <li className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-bold"><span className="text-indigo-600">✓</span> Unlimited Habits</li>
@@ -257,7 +257,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
                     <div className="bg-slate-900 dark:bg-slate-800 p-6 md:p-10 rounded-[40px] shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-black px-4 py-2 rounded-bl-2xl">POPULAR</div>
                         <h3 className="text-xl font-bold text-white mb-2">Pro</h3>
-                        <div className="text-3xl md:text-4xl font-black text-white mb-6">$5<span className="text-lg text-slate-500 font-medium">/mo</span></div>
+                        <div className="text-3xl md:text-4xl font-black text-white mb-6">₹499<span className="text-lg text-slate-500 font-medium">/mo</span></div>
                         <ul className="space-y-4 mb-10">
                             <li className="flex items-center gap-3 text-slate-300 font-bold"><span className="text-indigo-400">✓</span> Unlimited History</li>
                             <li className="flex items-center gap-3 text-slate-300 font-bold"><span className="text-indigo-400">✓</span> Advanced Analytics</li>
