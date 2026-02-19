@@ -51,7 +51,7 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({ onClose }) => {
                     {isSignUp ? 'Create Account' : 'Welcome Back'}
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 font-medium mb-6 md:mb-8 text-sm md:text-base">
-                    {isSignUp ? 'Start your journey to better habits.' : 'Sign in to sync your progress.'}
+                    {isSignUp ? 'Start your journey to better habits.' : 'Log in to sync your progress.'}
                 </p>
 
                 {error && (
@@ -92,38 +92,28 @@ export const LoginOverlay: React.FC<LoginOverlayProps> = ({ onClose }) => {
                         disabled={loading}
                         className="w-full bg-indigo-600 text-white py-3.5 rounded-2xl font-bold hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-200 disabled:opacity-70 disabled:hover:scale-100"
                     >
-                        {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                        {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Log in')}
                     </button>
                 </form>
 
                 <div className="relative mb-6">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-100"></div>
+                        <div className="w-full border-t border-slate-100 dark:border-slate-800"></div>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white dark:bg-slate-900 px-4 text-slate-400 font-black tracking-widest">Or continue with</span>
+                        <span className="bg-white dark:bg-slate-900 px-4 text-slate-400 font-black tracking-widest">
+                            {isSignUp ? "Already have an account?" : "Don't have an account?"}
+                        </span>
                     </div>
                 </div>
 
                 <button
-                    onClick={signInWithGoogle}
+                    onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
                     type="button"
-                    width="full"
                     className="w-full bg-slate-900 dark:bg-white dark:text-slate-900 text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 dark:hover:bg-slate-100 transition-all hover:scale-[1.02] active:scale-95 shadow-lg"
                 >
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 md:w-6 md:h-6" alt="Google" />
-                    <span>Google</span>
+                    <span>{isSignUp ? 'Log in' : 'Sign Up'}</span>
                 </button>
-
-                <p className="mt-8 text-xs font-bold text-slate-400">
-                    {isSignUp ? "Already have an account?" : "Don't have an account?"}{' '}
-                    <button
-                        onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-                        className="text-indigo-600 hover:text-indigo-700 transition-colors"
-                    >
-                        {isSignUp ? 'Sign In' : 'Sign Up'}
-                    </button>
-                </p>
             </div>
         </div>
     );

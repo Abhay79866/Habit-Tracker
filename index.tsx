@@ -95,6 +95,10 @@ const HabitTracker = () => {
   const [isDarkMode, setIsDarkMode] = useState(false); // Theme state
   const [showLogin, setShowLogin] = useState(false);
 
+  // Time-Lock: Get today's date normalized to midnight
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   // Detect theme changes
   useEffect(() => {
     const checkTheme = () => setIsDarkMode(document.documentElement.classList.contains('dark'));
@@ -718,15 +722,23 @@ const HabitTracker = () => {
                       const day = dayIdx + 1;
                       const isVisible = day <= daysInMonth;
                       const isAnimating = animatingHabitId === `${habit.id}-${dayIdx}`;
+
+                      // Date Comparison Logic
+                      const logDate = new Date(currentYear, currentMonth, day);
+                      const isPastDate = logDate < today;
+
                       return (
                         <td key={dayIdx} className={`p-1.5 text-center ${!isVisible && 'bg-slate-50/30 dark:bg-slate-800/30 opacity-20'}`}>
                           {isVisible && (
                             <div
-                              onClick={() => toggleCheck(habit.id, dayIdx)}
-                              className={`w-8 h-8 mx-auto rounded-xl cursor-pointer transition-all flex items-center justify-center border-2 ${checked
-                                ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100 dark:shadow-none'
-                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500'
-                                } ${isAnimating ? 'checkbox-anim' : ''} active:scale-90`}
+                              onClick={() => !isPastDate && toggleCheck(habit.id, dayIdx)}
+                              className={`w-8 h-8 mx-auto rounded-xl transition-all flex items-center justify-center border-2 ${isPastDate
+                                ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
+                                : 'cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-500 active:scale-90'
+                                } ${checked
+                                  ? isPastDate ? 'bg-indigo-600/50 border-indigo-600/50' : 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-100 dark:shadow-none'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                                } ${isAnimating ? 'checkbox-anim' : ''}`}
                             >
                               {checked && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7" /></svg>}
                             </div>
